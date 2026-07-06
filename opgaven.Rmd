@@ -1,0 +1,148 @@
+---
+title: "Onzekerheidsvisualisatie"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Opgave 1
+
+Download the data
+```{r}
+library(cbsodataR)
+col <- "#0058b8"
+
+meta <- cbs_get_meta("85454NED")
+key <- meta$DataProperties$Key[c(1:3, 46)]
+
+d <- cbs_get_data(
+  "85454NED", 
+  select = key
+)
+
+d1 <- 
+  d |> 
+  cbs_add_label_columns()
+```
+
+
+```{r}
+library(tidyverse)
+d2 <- d1 |> 
+  filter(Persoonskenmerken == "T009002") |> 
+  mutate(
+    year = Perioden_label |> as.character() |> as.integer(),
+    diabetes = DiabetesSuikerziekteType2_30,
+    value = factor(Marges, levels=c(meta$Marges$Key), labels=c("value", "lower", "upper"))
+  ) |> 
+  select(year, diabetes,value) |>
+  pivot_wider(names_from = value, values_from = diabetes) |> 
+  glimpse()
+```
+En plotten maar:
+
+```{r}
+kenmerken <- meta$Persoonskenmerken$Key
+
+d3 <- d1 |> 
+  filter(Persoonskenmerken %in% kenmerken[8:13]) |> 
+  mutate(
+    year = Perioden_label |> as.character() |> as.integer(),
+    diabetes = DiabetesSuikerziekteType2_30,
+    value = factor(Marges, levels=c(meta$Marges$Key), labels=c("value", "lower", "upper")),
+    age = gsub("Leeftijd: ", "", Persoonskenmerken_label),
+    age = gsub(" jaar", "", age),
+    age = sub("tot", "to", age)
+  ) |> 
+  glimpse() |> 
+  select(year, diabetes,value,age) |>
+  pivot_wider(names_from = value, values_from = diabetes) |> 
+  glimpse()
+
+d3 |> 
+  ggplot(aes(x = year, y = value)) + 
+  geom_line(color=col) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1, accuracy = 0.1 ),
+                     limits = c(0,15.4), expand = c(0,NA)) +
+  scale_x_continuous(n.breaks=3) +
+  labs(
+    x = "", 
+    y = "", 
+    title="Diabetes 2 prevalance (per age group) 2014-2024"
+  ) +
+  facet_grid(~age) +
+  theme_minimal() + 
+    geom_ribbon(
+    aes(ymin = lower, ymax = upper),
+    fill = col,
+    alpha = 0.2
+  )
+
+```
+
+
+## Opgave 2
+
+Data zoeken:
+```{r}
+meta <- cbs_get_meta("71426ned")
+d <- cbs_get_data("71426ned")
+
+d1 <- 
+  d |> 
+  cbs_add_label_columns()
+
+library(tidyverse)
+
+d2 <- 
+  d1 |> 
+  filter(
+    Geslacht == "T001038",
+    Leeftijd == "10000",
+    !str_detect(RegioS, "PV99"),
+  ) |>
+  mutate(
+    year = Perioden_label |> as.character() |> as.integer(),
+    value = Verkeersdoden_1,
+    region = RegioS_label
+  ) |> 
+  select(region, year, value) |> 
+  glimpse()
+```
+
+a)
+```{r}
+col <- "#0058b8"
+
+
+library(tidyverse)
+p2 <- d2 |> 
+  filter(region == "Nederland") |> 
+  ggplot(aes(x = year, y = value)) + 
+  geom_col(fill=col) +
+  labs(x = "", y = "", title="Traffic fatalities") + 
+  theme_minimal()
+
+p2
+```
+
+b)
+
+```{r}
+p2_prov <- d2 |> 
+  mutate(
+    region = str_remove(region, " \\(PV\\)")
+  ) |>
+  filter(region %in% c("Gelderland","Limburg", "Noord-Brabant", "Zuid-Holland")) |>
+  glimpse() |> 
+  ggplot(aes(x = year, y = value)) + 
+  geom_col(fill=col) +
+  labs(x = "", y = "", title="Traffic fatalities") + 
+  theme_minimal() + 
+  facet_grid(~region)
+
+p2_prov
+```
