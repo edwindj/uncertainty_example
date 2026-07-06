@@ -1,0 +1,32 @@
+---
+title: "Onzekerheidsviz"
+format: pdf
+editor: visual
+---
+
+## Opgave 1
+
+Reproduceer de volgende visualisatie:
+
+![Diabetes](img/agegroups_conf.png)
+
+Probeer alle aspecten te reproduceren (titel, assen etc.)
+
+- Download de benodigde data uit StatLine et behulp van cbsodataR: 
+diabetes naar leeftijd met marges. (tabel id = "85454NED")
+- De plot gebruikt `geom_ribbon` en facets.
+
+
+## Opgave 2
+
+Zoek de data over verkeersdoden in StatLine en
+
+a) Reproduceer de volgende visualsatie:
+
+![Verkeersdoden in NL](./img/traffic.png)
+
+b) En deze:
+
+![Verkeersdoden per prov](./img/traffic_prov.png)
+
+
